@@ -1,0 +1,8 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: {name: cinebook, namespace: argocd}
+spec:
+  project: default
+  source: {repoURL: https://github.com/REPLACE_ORG/cinebook-telugu.git, targetRevision: main, path: helm/cinebook, helm: {valueFiles: [values-prod.yaml]}}
+  destination: {server: https://kubernetes.default.svc, namespace: cinebook}
+  syncPolicy: {automated: {prune: true, selfHeal: true}, syncOptions: [CreateNamespace=true]}
