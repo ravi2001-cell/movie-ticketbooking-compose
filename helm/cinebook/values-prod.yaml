@@ -1,0 +1,3 @@
+api: {image: ACCOUNT.dkr.ecr.ap-south-1.amazonaws.com/cinebook-api, tag: REPLACE}
+web: {image: ACCOUNT.dkr.ecr.ap-south-1.amazonaws.com/cinebook-web, tag: REPLACE}
+ingress: {enabled: true, className: alb, host: tickets.yourdomain.com, certificateArn: arn:aws:acm:ap-south-1:ACCOUNT:certificate/REPLACE}
