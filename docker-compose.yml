@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_DB: ${POSTGRES_DB:-cinebook}, POSTGRES_USER: ${POSTGRES_USER:-cinebook}, POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}}
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U cinebook -d cinebook"], interval: 5s, timeout: 5s, retries: 10}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+  api:
+    build: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-cinebook}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-cinebook}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-32-character-minimum-production-secret}
+      SMS_ENABLED: ${SMS_ENABLED:-false}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_FROM: ${TWILIO_FROM}
+    depends_on: {db: {condition: service_healthy}}
+  web:
+    build: ./frontend
+    ports: ["8080:80"]
+    depends_on: [api]
+volumes: {postgres-data: {}}
