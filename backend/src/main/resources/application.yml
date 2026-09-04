@@ -1,0 +1,5 @@
+server: {port: 8080}
+spring:
+  datasource: {url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cinebook}, username: ${SPRING_DATASOURCE_USERNAME:cinebook}, password: ${SPRING_DATASOURCE_PASSWORD:change-me}}
+  jpa: {hibernate: {ddl-auto: update}, open-in-view: false}
+app: {sms-enabled: ${SMS_ENABLED:false}, twilio-from: ${TWILIO_FROM:}}
