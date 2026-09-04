@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: cinebook-api, namespace: {{ .Values.namespace }}}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector: {matchLabels: {app: cinebook-api}}
+  template:
+    metadata: {labels: {app: cinebook-api}}
+    spec:
+      containers:
+      - name: api
+        image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
+        ports: [{containerPort: 8080}]
+        envFrom: [{secretRef: {name: cinebook-secrets}}]
+        resources: {{- toYaml .Values.resources | nindent 10 }}
+        readinessProbe: {httpGet: {path: /api/health, port: 8080}, initialDelaySeconds: 20}
+        livenessProbe: {httpGet: {path: /api/health, port: 8080}, initialDelaySeconds: 40}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: cinebook-api, namespace: {{ .Values.namespace }}}
+spec: {selector: {app: cinebook-api}, ports: [{port: 8080, targetPort: 8080}]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: cinebook-web, namespace: {{ .Values.namespace }}}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector: {matchLabels: {app: cinebook-web}}
+  template:
+    metadata: {labels: {app: cinebook-web}}
+    spec:
+      containers:
+      - name: web
+        image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
+        ports: [{containerPort: 80}]
+        resources: {{- toYaml .Values.resources | nindent 10 }}
+        readinessProbe: {httpGet: {path: /, port: 80}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: cinebook-web, namespace: {{ .Values.namespace }}}
+spec: {selector: {app: cinebook-web}, ports: [{port: 80, targetPort: 80}]}
+{{- if .Values.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cinebook
+  namespace: {{ .Values.namespace }}
+  annotations: {alb.ingress.kubernetes.io/scheme: internet-facing, alb.ingress.kubernetes.io/target-type: ip}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+  - host: {{ .Values.ingress.host | quote }}
+    http: {paths: [{path: /, pathType: Prefix, backend: {service: {name: cinebook-web, port: {number: 80}}}}]}
+{{- end }}
